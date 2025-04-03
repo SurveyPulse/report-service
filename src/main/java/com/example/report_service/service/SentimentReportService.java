@@ -14,7 +14,6 @@ import com.example.report_service.exception.ReportExceptionType;
 import com.example.report_service.repository.OverallSentimentReportRepository;
 import com.example.report_service.repository.SentimentReportRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SentimentReportService {
@@ -140,7 +138,6 @@ public class SentimentReportService {
         return overallSentimentReportDto;
     }
 
-    @Transactional(readOnly = true)
     public Page<SentimentReportDto> getSentimentReports(Long surveyId, int page) {
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<SentimentReport> sentimentReports = sentimentReportRepository.findBySurveyId(surveyId, pageable);
@@ -154,7 +151,6 @@ public class SentimentReportService {
         return dtoPage;
     }
 
-    @Transactional(readOnly = true)
     public OverallSentimentReportDto getOverallReport(Long surveyId) {
         OverallSentimentReport overallSentimentReport = overallReportRepository.findBySurveyId(surveyId)
                                                                                .orElseThrow(() -> new NotFoundException(ReportExceptionType.OVERALL_REPORT_NOT_FOUND));
