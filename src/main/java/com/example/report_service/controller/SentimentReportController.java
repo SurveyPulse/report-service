@@ -5,6 +5,7 @@ import com.example.report_service.dto.response.OverallSentimentReportDto;
 import com.example.report_service.dto.response.SentimentReportDto;
 import com.example.report_service.service.SentimentReportService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -12,15 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/reports")
+@RequiredArgsConstructor
 @Slf4j
 public class SentimentReportController {
 
     private final SentimentReportService reportService;
 
-    public SentimentReportController(SentimentReportService reportService) {
-        this.reportService = reportService;
-    }
-    
     @PostMapping("/analyze")
     public ResponseEntity<SentimentReportDto> analyzeAndAggregateReport(@RequestBody AggregateRequest request) {
         try {
