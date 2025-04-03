@@ -3,7 +3,6 @@ package com.example.report_service.dto.response;
 import com.example.report_service.entity.OverallSentimentReport;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public record OverallSentimentReportDto(
         Long id,
@@ -18,14 +17,9 @@ public record OverallSentimentReportDto(
         double averageNeutral,
         double averageMixed,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt,
-        List<SentimentReportDto> sentimentReports
+        LocalDateTime updatedAt
 ) {
     public static OverallSentimentReportDto from(OverallSentimentReport entity) {
-        var childDtos = entity.getSentimentReports().stream()
-                              .map(SentimentReportDto::from)
-                              .toList();
-
         return new OverallSentimentReportDto(
                 entity.getId(),
                 entity.getSurveyId(),
@@ -39,8 +33,7 @@ public record OverallSentimentReportDto(
                 entity.getAverageNeutral(),
                 entity.getAverageMixed(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt(),
-                childDtos
+                entity.getUpdatedAt()
         );
     }
 }
