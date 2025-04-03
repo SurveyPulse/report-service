@@ -21,37 +21,19 @@ public class SentimentReportController {
 
     @PostMapping("/analyze")
     public ResponseEntity<SentimentReportDto> analyzeAndAggregateReport(@RequestBody AggregateRequest request) {
-        try {
             SentimentReportDto report = reportService.aggregateReport(request);
             return ResponseEntity.ok(report);
-        } catch (Exception e) {
-            log.error("Error aggregating report for surveyId {}", request.getSurveyId(), e);
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @PostMapping("/overall/{surveyId}/generate")
     public ResponseEntity<OverallSentimentReportDto> generateOverallReport(@PathVariable Long surveyId) {
-        try {
             OverallSentimentReportDto overallReport = reportService.generateOverallReport(surveyId);
             return ResponseEntity.ok(overallReport);
-        } catch (Exception e) {
-            log.error("Error generating overall report for surveyId {}", surveyId, e);
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @GetMapping("/overall/{surveyId}")
-    public ResponseEntity<Page<OverallSentimentReportDto>> getOverallReports(
-            @PathVariable Long surveyId,
-            @RequestParam(defaultValue = "0") int page
-    ) {
-        try {
+    public ResponseEntity<Page<OverallSentimentReportDto>> getOverallReports(@PathVariable Long surveyId, @RequestParam(defaultValue = "0") int page) {
             Page<OverallSentimentReportDto> dtoPage = reportService.getOverallReports(surveyId, page);
             return ResponseEntity.ok(dtoPage);
-        } catch (Exception e) {
-            log.error("Error retrieving overall reports for surveyId {}", surveyId, e);
-            return ResponseEntity.notFound().build();
-        }
     }
 }
