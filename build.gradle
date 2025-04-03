@@ -48,6 +48,9 @@ dependencies {
 
 	implementation 'com.github.SurveyPulse:global-service:v1.0.5:plain'
 
+	// AWS Comprehend SDK 추가
+	implementation 'com.amazonaws:aws-java-sdk-comprehend:1.12.538'
+
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
 	implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'

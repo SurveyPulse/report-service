@@ -65,3 +65,5 @@ resilience4j.circuitbreaker:
       failureRateThreshold: 50
       waitDurationInOpenState: 10s
 
+aws:
+  region: us-east-2
