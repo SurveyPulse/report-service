@@ -66,4 +66,4 @@ resilience4j.circuitbreaker:
       waitDurationInOpenState: 10s
 
 aws:
-  region: us-east-2
+  region: ap-northeast-2
