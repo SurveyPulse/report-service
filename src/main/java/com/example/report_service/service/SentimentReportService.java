@@ -81,10 +81,11 @@ public class SentimentReportService {
             sumMixed += result.getSentimentScore().getMixed();
         }
 
-        double avgPositive = sumPositive / total;
-        double avgNegative = sumNegative / total;
-        double avgNeutral = sumNeutral / total;
-        double avgMixed = sumMixed / total;
+        // 평균 계산 후 소수점 3자리 이하 버리기 (내림)
+        double avgPositive = Math.floor((sumPositive / total) * 1000) / 1000.0;
+        double avgNegative = Math.floor((sumNegative / total) * 1000) / 1000.0;
+        double avgNeutral  = Math.floor((sumNeutral  / total) * 1000) / 1000.0;
+        double avgMixed    = Math.floor((sumMixed    / total) * 1000) / 1000.0;
 
         SentimentReport report = SentimentReport.builder()
                                                 .surveyId(surveyId)
