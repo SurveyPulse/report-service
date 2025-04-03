@@ -5,7 +5,7 @@ import com.example.report_service.entity.SentimentReport;
 import java.time.LocalDateTime;
 
 public record SentimentReportDto(
-        Long id,
+        Long sentimentId,
         Long surveyId,
         Long responseId,
         int totalResponses,

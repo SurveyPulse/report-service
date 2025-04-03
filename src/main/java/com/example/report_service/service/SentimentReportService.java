@@ -30,7 +30,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class SentimentReportService {
 
-    private final SentimentReportRepository reportRepository;
+    private final SentimentReportRepository sentimentReportRepository;
     private final OverallSentimentReportRepository overallReportRepository;
     private final AwsComprehendService awsComprehendService;
 
@@ -69,7 +69,7 @@ public class SentimentReportService {
                                                 .averageMixed(avgMixed)
                                                 .build();
 
-        SentimentReport savedReport = reportRepository.save(report);
+        SentimentReport savedReport = sentimentReportRepository.save(report);
 
         SentimentReportDto sentimentReportDto = SentimentReportDto.from(savedReport);
         return sentimentReportDto;
@@ -88,7 +88,7 @@ public class SentimentReportService {
 
     @Transactional
     public OverallSentimentReportDto generateOverallReport(Long surveyId) {
-        List<SentimentReport> reports = reportRepository.findBySurveyId(surveyId);
+        List<SentimentReport> reports = sentimentReportRepository.findBySurveyId(surveyId);
         if (reports.isEmpty()) {
             throw new NotFoundException(ReportExceptionType.REPORT_NOT_FOUND);
         }
@@ -96,42 +96,72 @@ public class SentimentReportService {
         // 2) 가중 평균 계산
         OverallStats stats = OverallStats.fromReports(reports);
 
-        OverallSentimentReport overallReport = OverallSentimentReport.builder()
-                                                                     .surveyId(surveyId)
-                                                                     .totalResponses(stats.getTotalResponses())
-                                                                     .positiveCount(stats.getPositiveCount())
-                                                                     .negativeCount(stats.getNegativeCount())
-                                                                     .neutralCount(stats.getNeutralCount())
-                                                                     .mixedCount(stats.getMixedCount())
-                                                                     .averagePositive(stats.getOverallPositive())
-                                                                     .averageNegative(stats.getOverallNegative())
-                                                                     .averageNeutral(stats.getOverallNeutral())
-                                                                     .averageMixed(stats.getOverallMixed())
-                                                                     .build();
-
-        OverallSentimentReport savedOverall = overallReportRepository.save(overallReport);
-        for (SentimentReport child : reports) {
-            child.addOverallSentimentReportAndSentimentReport(savedOverall);
+        OverallSentimentReport overallReport;
+        if (overallReportRepository.existsBySurveyId(surveyId)) {
+            overallReport = overallReportRepository.findBySurveyId(surveyId)
+                                                   .orElseThrow(() -> new NotFoundException(ReportExceptionType.OVERALL_REPORT_NOT_FOUND));
+            overallReport.updateStats(
+                    stats.getTotalResponses(),
+                    stats.getPositiveCount(),
+                    stats.getNegativeCount(),
+                    stats.getNeutralCount(),
+                    stats.getMixedCount(),
+                    stats.getOverallPositive(),
+                    stats.getOverallNegative(),
+                    stats.getOverallNeutral(),
+                    stats.getOverallMixed()
+            );
+            overallReport = overallReportRepository.save(overallReport);
+        } else {
+            // 없으면 새로 생성
+            overallReport = OverallSentimentReport.builder()
+                                                  .surveyId(surveyId)
+                                                  .totalResponses(stats.getTotalResponses())
+                                                  .positiveCount(stats.getPositiveCount())
+                                                  .negativeCount(stats.getNegativeCount())
+                                                  .neutralCount(stats.getNeutralCount())
+                                                  .mixedCount(stats.getMixedCount())
+                                                  .averagePositive(stats.getOverallPositive())
+                                                  .averageNegative(stats.getOverallNegative())
+                                                  .averageNeutral(stats.getOverallNeutral())
+                                                  .averageMixed(stats.getOverallMixed())
+                                                  .build();
+            overallReport = overallReportRepository.save(overallReport);
         }
-        reportRepository.saveAll(reports);
 
-        OverallSentimentReportDto overallSentimentReportDto = OverallSentimentReportDto.from(savedOverall);
+        // 개별 보고서와의 연관관계 동기화
+        for (SentimentReport child : reports) {
+            child.addOverallSentimentReportAndSentimentReport(overallReport);
+        }
+        sentimentReportRepository.saveAll(reports);
+
+        OverallSentimentReportDto overallSentimentReportDto = OverallSentimentReportDto.from(overallReport);
 
         return overallSentimentReportDto;
     }
 
     @Transactional(readOnly = true)
-    public Page<OverallSentimentReportDto> getOverallReports(Long surveyId, int page) {
+    public Page<SentimentReportDto> getSentimentReports(Long surveyId, int page) {
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<OverallSentimentReport> overallList = overallReportRepository.findBySurveyId(surveyId, pageable);
+        Page<SentimentReport> sentimentReports = sentimentReportRepository.findBySurveyId(surveyId, pageable);
 
-        if (overallList.isEmpty()) {
+        if (sentimentReports.isEmpty()) {
             throw new NotFoundException(ReportExceptionType.OVERALL_SENTIMENT_IS_EMPTY);
         }
 
-        Page<OverallSentimentReportDto> dtoPage = overallList.map(OverallSentimentReportDto::from);
+        Page<SentimentReportDto> dtoPage = sentimentReports.map(SentimentReportDto::from);
 
         return dtoPage;
+    }
+
+    @Transactional(readOnly = true)
+    public OverallSentimentReportDto getOverallReport(Long surveyId) {
+        OverallSentimentReport overallSentimentReport = overallReportRepository.findBySurveyId(surveyId)
+                                                                               .orElseThrow(() -> new NotFoundException(ReportExceptionType.OVERALL_REPORT_NOT_FOUND));
+
+        OverallSentimentReportDto overallSentimentReportDto = OverallSentimentReportDto.from(overallSentimentReport);
+
+        return overallSentimentReportDto;
     }
 
 }

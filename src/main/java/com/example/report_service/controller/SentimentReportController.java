@@ -31,9 +31,15 @@ public class SentimentReportController {
             return ResponseEntity.ok(overallReport);
     }
 
-    @GetMapping("/overall/{surveyId}")
-    public ResponseEntity<Page<OverallSentimentReportDto>> getOverallReports(@PathVariable Long surveyId, @RequestParam(defaultValue = "0") int page) {
-            Page<OverallSentimentReportDto> dtoPage = reportService.getOverallReports(surveyId, page);
+    @GetMapping("/sentiments/{surveyId}")
+    public ResponseEntity<Page<SentimentReportDto>> getSentimentReports(@PathVariable Long surveyId, @RequestParam(defaultValue = "0") int page) {
+            Page<SentimentReportDto> dtoPage = reportService.getSentimentReports(surveyId, page);
             return ResponseEntity.ok(dtoPage);
+    }
+
+    @GetMapping("/overall/{surveyId}")
+    public ResponseEntity<OverallSentimentReportDto> getOverallReport(@PathVariable Long surveyId) {
+        OverallSentimentReportDto overallSentimentReportDto = reportService.getOverallReport(surveyId);
+        return ResponseEntity.ok(overallSentimentReportDto);
     }
 }

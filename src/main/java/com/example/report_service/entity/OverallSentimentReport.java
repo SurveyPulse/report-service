@@ -61,4 +61,17 @@ public class OverallSentimentReport extends BaseEntity {
         this.neutralCount = neutralCount;
         this.mixedCount = mixedCount;
     }
+
+    public void updateStats(int totalResponses, int positiveCount, int negativeCount, int neutralCount, int mixedCount,
+                            double averagePositive, double averageNegative, double averageNeutral, double averageMixed) {
+        this.totalResponses = totalResponses;
+        this.positiveCount = positiveCount;
+        this.negativeCount = negativeCount;
+        this.neutralCount = neutralCount;
+        this.mixedCount = mixedCount;
+        this.averagePositive = averagePositive;
+        this.averageNegative = averageNegative;
+        this.averageNeutral = averageNeutral;
+        this.averageMixed = averageMixed;
+    }
 }
