@@ -1,5 +1,6 @@
 package com.example.report_service.entity;
 
+import com.example.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "sentiment_reports")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SentimentReport {
+public class SentimentReport extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +22,10 @@ public class SentimentReport {
 
     @Column(nullable = false)
     private Long responseId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "overall_sentiment_report_id")
+    private OverallSentimentReport overallSentimentReport;
 
     // 전체 응답 수
     @Column(nullable = false)
@@ -46,14 +51,10 @@ public class SentimentReport {
     @Column(nullable = false)
     private double averageMixed;
 
-    // 보고서 생성 시각
-    @Column(nullable = false)
-    private LocalDateTime generatedAt;
-
     @Builder
     public SentimentReport(Long surveyId, Long responseId, int totalResponses, int positiveCount, int negativeCount,
                            int neutralCount, int mixedCount, double averagePositive, double averageNegative, double averageNeutral,
-                           double averageMixed, LocalDateTime generatedAt) {
+                           double averageMixed) {
         this.surveyId = surveyId;
         this.responseId = responseId;
         this.totalResponses = totalResponses;
@@ -65,6 +66,10 @@ public class SentimentReport {
         this.averageNegative = averageNegative;
         this.averageNeutral = averageNeutral;
         this.averageMixed = averageMixed;
-        this.generatedAt = generatedAt;
+    }
+
+    public void addOverallSentimentReportAndSentimentReport(OverallSentimentReport overallSentimentReport) {
+        this.overallSentimentReport = overallSentimentReport;
+        overallSentimentReport.getSentimentReports().add(this);
     }
 }
