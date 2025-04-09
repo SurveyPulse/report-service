@@ -20,7 +20,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -139,7 +138,7 @@ public class SentimentReportService {
         return OverallSentimentReportDto.from(overallReport);
     }
 
-    public Page<SentimentReportDto> getAllSentimentReport(Long surveyId, Long questionId, int page) {
+    public Page<SentimentReportDto> getSentimentReportsBySurveyAndQuestion(Long surveyId, Long questionId, int page) {
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<SentimentReport> sentimentReports = sentimentReportRepository.findAllBySurveyIdAndQuestionId(surveyId, questionId, pageable);
 

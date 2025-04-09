@@ -34,7 +34,7 @@ public class SentimentReportController {
     public ResponseEntity<Page<SentimentReportDto>> getAllSentimentReport(@PathVariable Long surveyId,
                                                                         @PathVariable Long questionId,
                                                                         @RequestParam(defaultValue = "0") int page) {
-        Page<SentimentReportDto> dtoPage = reportService.getAllSentimentReport(surveyId, questionId, page);
+        Page<SentimentReportDto> dtoPage = reportService.getSentimentReportsBySurveyAndQuestion(surveyId, questionId, page);
         return ResponseEntity.ok(dtoPage);
     }
 
