@@ -13,6 +13,8 @@ public interface SentimentReportRepository extends JpaRepository<SentimentReport
 
     List<SentimentReport> findAllBySurveyIdAndQuestionId(Long surveyId, Long questionId);
 
+    Page<SentimentReport> findAllBySurveyId(Long surveyId, Pageable pageable);
+
     Page<SentimentReport> findAllBySurveyIdAndQuestionId(Long surveyId, Long questionId, Pageable pageable);
 
 }

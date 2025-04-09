@@ -136,7 +136,7 @@ public class SentimentReportService {
         sentimentReportRepository.saveAll(reports);
     }
 
-    public Page<SentimentReportDto> getSentimentReportsBySurveyAndQuestion(Long surveyId, Long questionId, int page) {
+    public Page<SentimentReportDto> getAllSentimentReportBySurveyAndQuestion(Long surveyId, Long questionId, int page) {
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<SentimentReport> sentimentReports = sentimentReportRepository.findAllBySurveyIdAndQuestionId(surveyId, questionId, pageable);
 
@@ -158,10 +158,35 @@ public class SentimentReportService {
         return SentimentReportDto.from(sentimentReport, questionWithSurveyDto);
     }
 
-    public OverallSentimentReportDto getOverallReport(Long surveyId, Long questionId) {
-        OverallSentimentReport overallSentimentReport = overallReportRepository.findBySurveyIdAndQuestionId(surveyId, questionId)
+    public Page<OverallSentimentReportSummaryDto> getAllOverallReportBySurvey(Long surveyId, int page) {
+        Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<OverallSentimentReport> overallSentimentReports = overallReportRepository.findBySurveyId(surveyId, pageable);
+
+        if (overallSentimentReports.isEmpty()) {
+            throw new NotFoundException(ReportExceptionType.OVERALL_SENTIMENT_IS_EMPTY);
+        }
+
+        return overallSentimentReports.map(entity -> {
+            QuestionWithSurveyDto questionWithSurveyDto = surveyClientService.getQuestionWithSurvey(
+                    entity.getSurveyId(), entity.getQuestionId()
+            );
+
+            return OverallSentimentReportSummaryDto.from(
+                    entity.getId(),
+                    questionWithSurveyDto.title(),
+                    questionWithSurveyDto.questionId(),
+                    questionWithSurveyDto.questionText()
+            );
+        });
+    }
+
+    public OverallSentimentReportDto getOverallReportById(Long overallReportId) {
+        OverallSentimentReport overallSentimentReport = overallReportRepository.findById(overallReportId)
                                                                                .orElseThrow(() -> new NotFoundException(ReportExceptionType.OVERALL_REPORT_NOT_FOUND));
-        return OverallSentimentReportDto.from(overallSentimentReport);
+
+        QuestionWithSurveyDto questionWithSurveyDto = surveyClientService.getQuestionWithSurvey(overallSentimentReport.getSurveyId(), overallSentimentReport.getQuestionId());
+
+        return OverallSentimentReportDto.from(overallSentimentReport, questionWithSurveyDto.title(), questionWithSurveyDto.questionText());
     }
 
 }

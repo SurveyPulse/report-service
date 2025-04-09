@@ -8,6 +8,8 @@ public record OverallSentimentReportDto(
         Long overallId,
         Long surveyId,
         Long questionId,
+        String title,
+        String questionText,
         int totalResponses,
         int positiveCount,
         int negativeCount,
@@ -20,11 +22,13 @@ public record OverallSentimentReportDto(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static OverallSentimentReportDto from(OverallSentimentReport entity) {
+    public static OverallSentimentReportDto from(OverallSentimentReport entity, String title, String questionText) {
         return new OverallSentimentReportDto(
                 entity.getId(),
                 entity.getSurveyId(),
                 entity.getQuestionId(),
+                title,
+                questionText,
                 entity.getTotalResponses(),
                 entity.getPositiveCount(),
                 entity.getNegativeCount(),
