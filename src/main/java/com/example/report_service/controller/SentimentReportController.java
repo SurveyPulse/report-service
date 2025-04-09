@@ -1,7 +1,6 @@
 package com.example.report_service.controller;
 
 import com.example.report_service.dto.request.AggregateRequest;
-import com.example.report_service.dto.response.AggregatedSentimentReportDto;
 import com.example.report_service.dto.response.OverallSentimentReportDto;
 import com.example.report_service.dto.response.SentimentReportDto;
 import com.example.report_service.service.SentimentReportService;
@@ -19,9 +18,9 @@ public class SentimentReportController {
     private final SentimentReportService reportService;
 
     @PostMapping("/analyze")
-    public ResponseEntity<AggregatedSentimentReportDto> analyzeAndAggregateReport(@RequestBody AggregateRequest request) {
-        AggregatedSentimentReportDto report = reportService.aggregateReport(request);
-            return ResponseEntity.ok(report);
+    public ResponseEntity<Void> analyzeAndAggregateReport(@RequestBody AggregateRequest request) {
+        reportService.aggregateReport(request);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/overall/{surveyId}/{questionId}/generate")
@@ -32,10 +31,10 @@ public class SentimentReportController {
     }
 
     @GetMapping("/sentiments/{surveyId}/{questionId}")
-    public ResponseEntity<Page<SentimentReportDto>> getSentimentReports(@PathVariable Long surveyId,
+    public ResponseEntity<Page<SentimentReportDto>> getAllSentimentReport(@PathVariable Long surveyId,
                                                                         @PathVariable Long questionId,
                                                                         @RequestParam(defaultValue = "0") int page) {
-        Page<SentimentReportDto> dtoPage = reportService.getSentimentReports(surveyId, questionId, page);
+        Page<SentimentReportDto> dtoPage = reportService.getAllSentimentReport(surveyId, questionId, page);
         return ResponseEntity.ok(dtoPage);
     }
 
@@ -44,5 +43,11 @@ public class SentimentReportController {
                                                                       @PathVariable Long questionId) {
         OverallSentimentReportDto overallSentimentReportDto = reportService.getOverallReport(surveyId, questionId);
         return ResponseEntity.ok(overallSentimentReportDto);
+    }
+
+    @GetMapping("/sentiment/{sentimentId}")
+    public ResponseEntity<SentimentReportDto> getSentimentReport(@PathVariable Long sentimentId) {
+        SentimentReportDto sentimentReportDto = reportService.getSentimentReport(sentimentId);
+        return ResponseEntity.ok(sentimentReportDto);
     }
 }

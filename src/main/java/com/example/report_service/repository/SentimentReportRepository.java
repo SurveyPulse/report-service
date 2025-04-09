@@ -11,9 +11,8 @@ import java.util.List;
 @Repository
 public interface SentimentReportRepository extends JpaRepository<SentimentReport, Long> {
 
-    List<SentimentReport> findBySurveyIdAndQuestionId(Long surveyId, Long questionId);
+    List<SentimentReport> findAllBySurveyIdAndQuestionId(Long surveyId, Long questionId);
 
-    Page<SentimentReport> findBySurveyIdAndQuestionId(Long surveyId, Long questionId, Pageable pageable);
+    Page<SentimentReport> findAllBySurveyIdAndQuestionId(Long surveyId, Long questionId, Pageable pageable);
 
 }
-

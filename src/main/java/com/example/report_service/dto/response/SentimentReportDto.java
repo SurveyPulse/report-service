@@ -5,6 +5,7 @@ import com.example.report_service.entity.SentimentReport;
 import java.time.LocalDateTime;
 
 public record SentimentReportDto(
+        QuestionWithSurveyDto questionWithSurveyDto,
         Long sentimentId,
         Long surveyId,
         Long responseId,
@@ -21,8 +22,9 @@ public record SentimentReportDto(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static SentimentReportDto from(SentimentReport entity) {
+    public static SentimentReportDto from(SentimentReport entity, QuestionWithSurveyDto questionWithSurveyDto) {
         return new SentimentReportDto(
+                questionWithSurveyDto,
                 entity.getId(),
                 entity.getSurveyId(),
                 entity.getResponseId(),

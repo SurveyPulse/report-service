@@ -2,6 +2,7 @@ package com.example.report_service.service;
 
 import com.amazonaws.services.comprehend.model.DetectSentimentResult;
 import com.example.global.exception.type.NotFoundException;
+import com.example.report_service.client.service.SurveyClientService;
 import com.example.report_service.dto.internal.OverallStats;
 import com.example.report_service.dto.internal.SentimentStats;
 import com.example.report_service.dto.request.AggregateRequest;
@@ -30,11 +31,10 @@ public class SentimentReportService {
     private final SentimentReportRepository sentimentReportRepository;
     private final OverallSentimentReportRepository overallReportRepository;
     private final AwsComprehendService awsComprehendService;
+    private final SurveyClientService surveyClientService;
 
     @Transactional
-    public AggregatedSentimentReportDto aggregateReport(AggregateRequest aggregateRequest) {
-        // 여러 질문에 대한 결과를 저장할 리스트
-        List<QuestionSentimentReportDto> reportDtos = new ArrayList<>();
+    public void aggregateReport(AggregateRequest aggregateRequest) {
 
         Long surveyId = aggregateRequest.surveyId();
         Long responseId = aggregateRequest.responseId() != null ? aggregateRequest.responseId() : 0L;
@@ -73,11 +73,8 @@ public class SentimentReportService {
                                                     .averageMixed(avgMixed)
                                                     .build();
 
-            SentimentReport savedReport = sentimentReportRepository.save(report);
-            reportDtos.add(QuestionSentimentReportDto.from(SentimentReportDto.from(savedReport)));
+            sentimentReportRepository.save(report);
         });
-
-        return new AggregatedSentimentReportDto(surveyId, responseId, reportDtos);
     }
 
     private SentimentStats analyzeText(String text) {
@@ -92,7 +89,7 @@ public class SentimentReportService {
 
     @Transactional
     public OverallSentimentReportDto generateOverallReport(Long surveyId, Long questionId) {
-        List<SentimentReport> reports = sentimentReportRepository.findBySurveyIdAndQuestionId(surveyId, questionId);
+        List<SentimentReport> reports = sentimentReportRepository.findAllBySurveyIdAndQuestionId(surveyId, questionId);
         if (reports.isEmpty()) {
             throw new NotFoundException(ReportExceptionType.REPORT_NOT_FOUND);
         }
@@ -142,15 +139,26 @@ public class SentimentReportService {
         return OverallSentimentReportDto.from(overallReport);
     }
 
-    public Page<SentimentReportDto> getSentimentReports(Long surveyId, Long questionId, int page) {
+    public Page<SentimentReportDto> getAllSentimentReport(Long surveyId, Long questionId, int page) {
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<SentimentReport> sentimentReports = sentimentReportRepository.findBySurveyIdAndQuestionId(surveyId, questionId, pageable);
+        Page<SentimentReport> sentimentReports = sentimentReportRepository.findAllBySurveyIdAndQuestionId(surveyId, questionId, pageable);
+
+        QuestionWithSurveyDto questionWithSurveyDto = surveyClientService.getQuestionWithSurvey(surveyId, questionId);
 
         if (sentimentReports.isEmpty()) {
             throw new NotFoundException(ReportExceptionType.OVERALL_SENTIMENT_IS_EMPTY);
         }
 
-        return sentimentReports.map(SentimentReportDto::from);
+        return sentimentReports.map(entity -> SentimentReportDto.from(entity, questionWithSurveyDto));
+    }
+
+    public SentimentReportDto getSentimentReport(Long sentimentId) {
+        SentimentReport sentimentReport = sentimentReportRepository.findById(sentimentId)
+                                                                   .orElseThrow(() -> new NotFoundException(ReportExceptionType.REPORT_NOT_FOUND));
+
+        QuestionWithSurveyDto questionWithSurveyDto = surveyClientService.getQuestionWithSurvey(sentimentReport.getSurveyId(), sentimentReport.getQuestionId());
+
+        return SentimentReportDto.from(sentimentReport, questionWithSurveyDto);
     }
 
     public OverallSentimentReportDto getOverallReport(Long surveyId, Long questionId) {
