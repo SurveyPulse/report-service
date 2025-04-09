@@ -87,7 +87,7 @@ public class SentimentReportService {
     }
 
     @Transactional
-    public OverallSentimentReportDto generateOverallReport(Long surveyId, Long questionId) {
+    public void generateOverallReport(Long surveyId, Long questionId) {
         List<SentimentReport> reports = sentimentReportRepository.findAllBySurveyIdAndQuestionId(surveyId, questionId);
         if (reports.isEmpty()) {
             throw new NotFoundException(ReportExceptionType.REPORT_NOT_FOUND);
@@ -134,8 +134,6 @@ public class SentimentReportService {
             child.addOverallSentimentReportAndSentimentReport(overallReport);
         }
         sentimentReportRepository.saveAll(reports);
-
-        return OverallSentimentReportDto.from(overallReport);
     }
 
     public Page<SentimentReportDto> getSentimentReportsBySurveyAndQuestion(Long surveyId, Long questionId, int page) {

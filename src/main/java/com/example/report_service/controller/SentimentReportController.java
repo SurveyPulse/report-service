@@ -24,10 +24,10 @@ public class SentimentReportController {
     }
 
     @PostMapping("/overall/{surveyId}/{questionId}/generate")
-    public ResponseEntity<OverallSentimentReportDto> generateOverallReport(@PathVariable Long surveyId,
+    public ResponseEntity<Void> generateOverallReport(@PathVariable Long surveyId,
                                                                            @PathVariable Long questionId) {
-        OverallSentimentReportDto overallReport = reportService.generateOverallReport(surveyId, questionId);
-        return ResponseEntity.ok(overallReport);
+        reportService.generateOverallReport(surveyId, questionId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/sentiments/{surveyId}/{questionId}")
