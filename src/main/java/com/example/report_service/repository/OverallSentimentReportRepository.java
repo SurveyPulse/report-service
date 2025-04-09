@@ -7,8 +7,8 @@ import java.util.Optional;
 
 public interface OverallSentimentReportRepository extends JpaRepository<OverallSentimentReport, Long> {
 
-    Optional<OverallSentimentReport> findBySurveyId(Long surveyId);
+    Optional<OverallSentimentReport> findBySurveyIdAndQuestionId(Long surveyId, Long questionId);
 
-    Boolean existsBySurveyId(Long surveyId);
+    boolean existsBySurveyIdAndQuestionId(Long surveyId, Long questionId);
 
 }

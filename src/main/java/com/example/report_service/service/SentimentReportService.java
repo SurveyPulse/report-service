@@ -5,9 +5,7 @@ import com.example.global.exception.type.NotFoundException;
 import com.example.report_service.dto.internal.OverallStats;
 import com.example.report_service.dto.internal.SentimentStats;
 import com.example.report_service.dto.request.AggregateRequest;
-import com.example.report_service.dto.response.AWSComprehendResult;
-import com.example.report_service.dto.response.OverallSentimentReportDto;
-import com.example.report_service.dto.response.SentimentReportDto;
+import com.example.report_service.dto.response.*;
 import com.example.report_service.entity.OverallSentimentReport;
 import com.example.report_service.entity.SentimentReport;
 import com.example.report_service.exception.ReportExceptionType;
@@ -21,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,50 +32,57 @@ public class SentimentReportService {
     private final AwsComprehendService awsComprehendService;
 
     @Transactional
-    public SentimentReportDto aggregateReport(AggregateRequest aggregateRequest) {
-        // 1) 텍스트 목록 검증
-        List<String> texts = aggregateRequest.getTexts();
-        if (texts == null || texts.isEmpty()) {
-            throw new NotFoundException(ReportExceptionType.TEXTS_IS_EMPTY);
-        }
+    public AggregatedSentimentReportDto aggregateReport(AggregateRequest aggregateRequest) {
+        // 여러 질문에 대한 결과를 저장할 리스트
+        List<QuestionSentimentReportDto> reportDtos = new ArrayList<>();
 
-        // 2) 텍스트 감성 분석 (SentimentStats 사용)
-        SentimentStats stats = analyzeTexts(texts);
-        if (stats.getTotal() == 0) {
-            throw new NotFoundException(ReportExceptionType.TEXTS_IS_EMPTY);
-        }
+        Long surveyId = aggregateRequest.surveyId();
+        Long responseId = aggregateRequest.responseId() != null ? aggregateRequest.responseId() : 0L;
 
-        // 3) 평균 계산 (SentimentStats 내 계산 메서드 사용)
-        double avgPositive = stats.getAvgPositive();
-        double avgNegative = stats.getAvgNegative();
-        double avgNeutral  = stats.getAvgNeutral();
-        double avgMixed    = stats.getAvgMixed();
+        // 여러 질문에 대한 답변을 순회
+        aggregateRequest.answers().forEach(answer -> {
+            String text = answer.text();
+            if (text == null || text.trim().isEmpty()) {
+                throw new NotFoundException(ReportExceptionType.TEXTS_IS_EMPTY);
+            }
 
-        // 4) 개별 보고서 엔티티 생성
-        SentimentReport report = SentimentReport.builder()
-                                                .surveyId(aggregateRequest.getSurveyId())
-                                                .responseId(aggregateRequest.getResponseId() != null ? aggregateRequest.getResponseId() : 0L)
-                                                .totalResponses(stats.getTotal())
-                                                .positiveCount(stats.getPositiveCount())
-                                                .negativeCount(stats.getNegativeCount())
-                                                .neutralCount(stats.getNeutralCount())
-                                                .mixedCount(stats.getMixedCount())
-                                                .averagePositive(avgPositive)
-                                                .averageNegative(avgNegative)
-                                                .averageNeutral(avgNeutral)
-                                                .averageMixed(avgMixed)
-                                                .build();
+            // 텍스트 감성 분석
+            SentimentStats stats = analyzeText(text);
+            if (stats.getTotal() == 0) {
+                throw new NotFoundException(ReportExceptionType.TEXTS_IS_EMPTY);
+            }
 
-        SentimentReport savedReport = sentimentReportRepository.save(report);
+            // 평균 계산
+            double avgPositive = stats.getAvgPositive();
+            double avgNegative = stats.getAvgNegative();
+            double avgNeutral  = stats.getAvgNeutral();
+            double avgMixed    = stats.getAvgMixed();
 
-        SentimentReportDto sentimentReportDto = SentimentReportDto.from(savedReport);
-        return sentimentReportDto;
+            SentimentReport report = SentimentReport.builder()
+                                                    .surveyId(surveyId)
+                                                    .questionId(answer.questionId())
+                                                    .responseId(responseId)
+                                                    .totalResponses(stats.getTotal())
+                                                    .positiveCount(stats.getPositiveCount())
+                                                    .negativeCount(stats.getNegativeCount())
+                                                    .neutralCount(stats.getNeutralCount())
+                                                    .mixedCount(stats.getMixedCount())
+                                                    .averagePositive(avgPositive)
+                                                    .averageNegative(avgNegative)
+                                                    .averageNeutral(avgNeutral)
+                                                    .averageMixed(avgMixed)
+                                                    .build();
+
+            SentimentReport savedReport = sentimentReportRepository.save(report);
+            reportDtos.add(QuestionSentimentReportDto.from(SentimentReportDto.from(savedReport)));
+        });
+
+        return new AggregatedSentimentReportDto(surveyId, responseId, reportDtos);
     }
 
-    private SentimentStats analyzeTexts(List<String> texts) {
+    private SentimentStats analyzeText(String text) {
         SentimentStats stats = new SentimentStats();
-        for (String text : texts) {
-            if (text == null || text.trim().isEmpty()) continue;
+        if (text != null && !text.trim().isEmpty()) {
             DetectSentimentResult dsr = awsComprehendService.analyzeText(text);
             AWSComprehendResult result = AWSComprehendResult.from(dsr);
             stats.accumulate(result);
@@ -85,18 +91,18 @@ public class SentimentReportService {
     }
 
     @Transactional
-    public OverallSentimentReportDto generateOverallReport(Long surveyId) {
-        List<SentimentReport> reports = sentimentReportRepository.findBySurveyId(surveyId);
+    public OverallSentimentReportDto generateOverallReport(Long surveyId, Long questionId) {
+        List<SentimentReport> reports = sentimentReportRepository.findBySurveyIdAndQuestionId(surveyId, questionId);
         if (reports.isEmpty()) {
             throw new NotFoundException(ReportExceptionType.REPORT_NOT_FOUND);
         }
 
-        // 2) 가중 평균 계산
+        // 가중 평균 계산
         OverallStats stats = OverallStats.fromReports(reports);
 
         OverallSentimentReport overallReport;
-        if (overallReportRepository.existsBySurveyId(surveyId)) {
-            overallReport = overallReportRepository.findBySurveyId(surveyId)
+        if (overallReportRepository.existsBySurveyIdAndQuestionId(surveyId, questionId)) {
+            overallReport = overallReportRepository.findBySurveyIdAndQuestionId(surveyId, questionId)
                                                    .orElseThrow(() -> new NotFoundException(ReportExceptionType.OVERALL_REPORT_NOT_FOUND));
             overallReport.updateStats(
                     stats.getTotalResponses(),
@@ -111,9 +117,9 @@ public class SentimentReportService {
             );
             overallReport = overallReportRepository.save(overallReport);
         } else {
-            // 없으면 새로 생성
             overallReport = OverallSentimentReport.builder()
                                                   .surveyId(surveyId)
+                                                  .questionId(questionId)
                                                   .totalResponses(stats.getTotalResponses())
                                                   .positiveCount(stats.getPositiveCount())
                                                   .negativeCount(stats.getNegativeCount())
@@ -133,31 +139,24 @@ public class SentimentReportService {
         }
         sentimentReportRepository.saveAll(reports);
 
-        OverallSentimentReportDto overallSentimentReportDto = OverallSentimentReportDto.from(overallReport);
-
-        return overallSentimentReportDto;
+        return OverallSentimentReportDto.from(overallReport);
     }
 
-    public Page<SentimentReportDto> getSentimentReports(Long surveyId, int page) {
+    public Page<SentimentReportDto> getSentimentReports(Long surveyId, Long questionId, int page) {
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<SentimentReport> sentimentReports = sentimentReportRepository.findBySurveyId(surveyId, pageable);
+        Page<SentimentReport> sentimentReports = sentimentReportRepository.findBySurveyIdAndQuestionId(surveyId, questionId, pageable);
 
         if (sentimentReports.isEmpty()) {
             throw new NotFoundException(ReportExceptionType.OVERALL_SENTIMENT_IS_EMPTY);
         }
 
-        Page<SentimentReportDto> dtoPage = sentimentReports.map(SentimentReportDto::from);
-
-        return dtoPage;
+        return sentimentReports.map(SentimentReportDto::from);
     }
 
-    public OverallSentimentReportDto getOverallReport(Long surveyId) {
-        OverallSentimentReport overallSentimentReport = overallReportRepository.findBySurveyId(surveyId)
+    public OverallSentimentReportDto getOverallReport(Long surveyId, Long questionId) {
+        OverallSentimentReport overallSentimentReport = overallReportRepository.findBySurveyIdAndQuestionId(surveyId, questionId)
                                                                                .orElseThrow(() -> new NotFoundException(ReportExceptionType.OVERALL_REPORT_NOT_FOUND));
-
-        OverallSentimentReportDto overallSentimentReportDto = OverallSentimentReportDto.from(overallSentimentReport);
-
-        return overallSentimentReportDto;
+        return OverallSentimentReportDto.from(overallSentimentReport);
     }
 
 }

@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public record OverallSentimentReportDto(
         Long overallId,
         Long surveyId,
+        Long questionId,
         int totalResponses,
         int positiveCount,
         int negativeCount,
@@ -23,6 +24,7 @@ public record OverallSentimentReportDto(
         return new OverallSentimentReportDto(
                 entity.getId(),
                 entity.getSurveyId(),
+                entity.getQuestionId(),
                 entity.getTotalResponses(),
                 entity.getPositiveCount(),
                 entity.getNegativeCount(),

@@ -21,6 +21,9 @@ public class OverallSentimentReport extends BaseEntity {
     @Column(nullable = false)
     private Long surveyId;
 
+    @Column(nullable = false)
+    private Long questionId;
+
     @OneToMany(mappedBy = "overallSentimentReport", cascade = CascadeType.PERSIST)
     List<SentimentReport> sentimentReports = new ArrayList<>();
 
@@ -47,10 +50,11 @@ public class OverallSentimentReport extends BaseEntity {
     private int mixedCount;
 
     @Builder
-    public OverallSentimentReport(Long surveyId, int totalResponses, double averagePositive,
+    public OverallSentimentReport(Long surveyId, Long questionId, int totalResponses, double averagePositive,
                                   double averageNegative, double averageNeutral, double averageMixed,
                                   int positiveCount, int negativeCount, int neutralCount, int mixedCount) {
         this.surveyId = surveyId;
+        this.questionId = questionId;
         this.totalResponses = totalResponses;
         this.averagePositive = averagePositive;
         this.averageNegative = averageNegative;
