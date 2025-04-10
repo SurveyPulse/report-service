@@ -4,6 +4,7 @@ import com.example.report_service.dto.request.AggregateRequest;
 import com.example.report_service.dto.response.OverallSentimentReportDto;
 import com.example.report_service.dto.response.OverallSentimentReportSummaryDto;
 import com.example.report_service.dto.response.SentimentReportDto;
+import com.example.report_service.dto.response.SentimentReportSingleDto;
 import com.example.report_service.service.SentimentReportService;
 
 import lombok.RequiredArgsConstructor;
@@ -25,11 +26,11 @@ public class SentimentReportController {
     }
 
     @GetMapping("/sentiments/{surveyId}/{questionId}")
-    public ResponseEntity<Page<SentimentReportDto>> getAllSentimentReport(@PathVariable Long surveyId,
+    public ResponseEntity<SentimentReportDto> getAllSentimentReport(@PathVariable Long surveyId,
                                                                         @PathVariable Long questionId,
                                                                         @RequestParam(defaultValue = "0") int page) {
-        Page<SentimentReportDto> dtoPage = reportService.getAllSentimentReportBySurveyAndQuestion(surveyId, questionId, page);
-        return ResponseEntity.ok(dtoPage);
+        SentimentReportDto sentimentReportDto = reportService.getAllSentimentReportBySurveyAndQuestion(surveyId, questionId, page);
+        return ResponseEntity.ok(sentimentReportDto);
     }
 
     @GetMapping("/overall/{overallReportId}")
@@ -47,8 +48,8 @@ public class SentimentReportController {
     }
 
     @GetMapping("/sentiment/{sentimentId}")
-    public ResponseEntity<SentimentReportDto> getSentimentReport(@PathVariable Long sentimentId) {
-        SentimentReportDto sentimentReportDto = reportService.getSentimentReport(sentimentId);
-        return ResponseEntity.ok(sentimentReportDto);
+    public ResponseEntity<SentimentReportSingleDto> getSentimentReport(@PathVariable Long sentimentId) {
+        SentimentReportSingleDto sentimentReportSingleDto = reportService.getSentimentReport(sentimentId);
+        return ResponseEntity.ok(sentimentReportSingleDto);
     }
 }

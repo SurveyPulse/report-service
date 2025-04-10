@@ -170,7 +170,7 @@ public class SentimentReportService {
         return stats;
     }
 
-    public Page<SentimentReportDto> getAllSentimentReportBySurveyAndQuestion(Long surveyId, Long questionId, int page) {
+    public SentimentReportDto  getAllSentimentReportBySurveyAndQuestion(Long surveyId, Long questionId, int page) {
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<SentimentReport> sentimentReports = sentimentReportRepository.findAllBySurveyIdAndQuestionId(surveyId, questionId, pageable);
 
@@ -180,16 +180,17 @@ public class SentimentReportService {
             throw new NotFoundException(ReportExceptionType.OVERALL_SENTIMENT_IS_EMPTY);
         }
 
-        return sentimentReports.map(entity -> SentimentReportDto.from(entity, questionWithSurveyDto));
+        Page<SentimentReportDetailDto> reportItems = sentimentReports.map(SentimentReportDetailDto::from);
+        return new SentimentReportDto(questionWithSurveyDto, reportItems);
     }
 
-    public SentimentReportDto getSentimentReport(Long sentimentId) {
+    public SentimentReportSingleDto getSentimentReport(Long sentimentId) {
         SentimentReport sentimentReport = sentimentReportRepository.findById(sentimentId)
                                                                    .orElseThrow(() -> new NotFoundException(ReportExceptionType.REPORT_NOT_FOUND));
 
         QuestionWithSurveyDto questionWithSurveyDto = surveyClientService.getQuestionWithSurvey(sentimentReport.getSurveyId(), sentimentReport.getQuestionId());
 
-        return SentimentReportDto.from(sentimentReport, questionWithSurveyDto);
+        return SentimentReportSingleDto.from(sentimentReport, questionWithSurveyDto);
     }
 
     public Page<OverallSentimentReportSummaryDto> getAllOverallReportBySurvey(Long surveyId, int page) {
