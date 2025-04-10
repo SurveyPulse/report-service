@@ -21,6 +21,13 @@ spring:
     username: root
     password: worldcup7!
     driver-class-name: com.mysql.cj.jdbc.Driver
+  kafka:
+    bootstrap-servers:
+    consumer:
+      group-id: report-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
   jpa:
     hibernate:
