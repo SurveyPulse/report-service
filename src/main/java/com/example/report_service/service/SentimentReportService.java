@@ -38,9 +38,10 @@ public class SentimentReportService {
     @Transactional
     public void aggregateAndGenerateReport(AggregateRequest aggregateRequest) {
         Long surveyId = aggregateRequest.surveyId();
-        Long responseId = aggregateRequest.responseId() != null ? aggregateRequest.responseId() : 0L;
+        Long responseId = aggregateRequest.responseId();
+        Long userId = aggregateRequest.userId();
 
-        Set<Long> processedQuestionIds = processAggregateRequest(aggregateRequest, surveyId, responseId);
+        Set<Long> processedQuestionIds = processAggregateRequest(aggregateRequest, surveyId, responseId, userId);
 
         processedQuestionIds.forEach(questionId -> generateOverallReportForQuestion(surveyId, questionId));
     }
@@ -49,12 +50,12 @@ public class SentimentReportService {
      * AggregateRequest 내의 모든 QuestionAnswerRequest를 처리하여 개별 감성 보고서를 생성하고,
      * 처리한 질문 ID 집합을 반환합니다.
      */
-    private Set<Long> processAggregateRequest(AggregateRequest aggregateRequest, Long surveyId, Long responseId) {
+    private Set<Long> processAggregateRequest(AggregateRequest aggregateRequest, Long surveyId, Long responseId, Long userId) {
         Set<Long> processedQuestionIds = new HashSet<>();
 
         aggregateRequest.answers().forEach(answer -> {
             validateAnswerText(answer);
-            processAnswer(surveyId, responseId, answer);
+            processAnswer(surveyId, responseId, userId, answer);
             processedQuestionIds.add(answer.questionId());
         });
 
@@ -71,7 +72,7 @@ public class SentimentReportService {
     /**
      * 하나의 QuestionAnswerRequest에 대해 텍스트 감성 분석을 수행하고 개별 감성 보고서를 저장합니다.
      */
-    private void processAnswer(Long surveyId, Long responseId, QuestionAnswerRequest answer) {
+    private void processAnswer(Long surveyId, Long responseId, Long userId, QuestionAnswerRequest answer) {
         String text = answer.text();
 
         // 텍스트 감성 분석 수행
@@ -91,6 +92,7 @@ public class SentimentReportService {
                                                 .surveyId(surveyId)
                                                 .questionId(answer.questionId())
                                                 .responseId(responseId)
+                                                .userId(userId)
                                                 .totalResponses(stats.getTotal())
                                                 .positiveCount(stats.getPositiveCount())
                                                 .negativeCount(stats.getNegativeCount())

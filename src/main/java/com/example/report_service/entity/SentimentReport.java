@@ -24,6 +24,9 @@ public class SentimentReport extends BaseEntity {
     @Column(nullable = false)
     private Long questionId;
 
+    @Column(nullable = false)
+    private Long userId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "overall_sentiment_report_id")
     private OverallSentimentReport overallSentimentReport;
@@ -53,12 +56,13 @@ public class SentimentReport extends BaseEntity {
     private double averageMixed;
 
     @Builder
-    public SentimentReport(Long surveyId, Long responseId, Long questionId, int totalResponses, int positiveCount, int negativeCount,
+    public SentimentReport(Long surveyId, Long responseId, Long questionId, Long userId, int totalResponses, int positiveCount, int negativeCount,
                            int neutralCount, int mixedCount, double averagePositive, double averageNegative, double averageNeutral,
                            double averageMixed) {
         this.surveyId = surveyId;
         this.responseId = responseId;
         this.questionId = questionId;
+        this.userId = userId;
         this.totalResponses = totalResponses;
         this.positiveCount = positiveCount;
         this.negativeCount = negativeCount;

@@ -5,5 +5,6 @@ import java.util.List;
 public record AggregateRequest(
         Long surveyId,
         Long responseId,
+        Long userId,
         List<QuestionAnswerRequest> answers
 ) {}
