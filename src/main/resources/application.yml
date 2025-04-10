@@ -67,6 +67,3 @@ resilience4j.circuitbreaker:
 
 aws:
   region: ap-northeast-2
-  credentials:
-    access-key: AKIAWNHTHTHUHWZ5R77D
-    secret-key: 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

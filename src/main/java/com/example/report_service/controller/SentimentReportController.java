@@ -20,14 +20,7 @@ public class SentimentReportController {
 
     @PostMapping("/analyze")
     public ResponseEntity<Void> analyzeAndAggregateReport(@RequestBody AggregateRequest request) {
-        reportService.aggregateReport(request);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/overall/{surveyId}/{questionId}/generate")
-    public ResponseEntity<Void> generateOverallReport(@PathVariable Long surveyId,
-                                                                           @PathVariable Long questionId) {
-        reportService.generateOverallReport(surveyId, questionId);
+        reportService.aggregateAndGenerateReport(request);
         return ResponseEntity.ok().build();
     }
 

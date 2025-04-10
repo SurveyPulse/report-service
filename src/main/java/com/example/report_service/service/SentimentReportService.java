@@ -6,6 +6,7 @@ import com.example.report_service.client.service.SurveyClientService;
 import com.example.report_service.dto.internal.OverallStats;
 import com.example.report_service.dto.internal.SentimentStats;
 import com.example.report_service.dto.request.AggregateRequest;
+import com.example.report_service.dto.request.QuestionAnswerRequest;
 import com.example.report_service.dto.response.*;
 import com.example.report_service.entity.OverallSentimentReport;
 import com.example.report_service.entity.SentimentReport;
@@ -20,7 +21,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -33,67 +36,85 @@ public class SentimentReportService {
     private final SurveyClientService surveyClientService;
 
     @Transactional
-    public void aggregateReport(AggregateRequest aggregateRequest) {
-
+    public void aggregateAndGenerateReport(AggregateRequest aggregateRequest) {
         Long surveyId = aggregateRequest.surveyId();
         Long responseId = aggregateRequest.responseId() != null ? aggregateRequest.responseId() : 0L;
 
-        // 여러 질문에 대한 답변을 순회
+        Set<Long> processedQuestionIds = processAggregateRequest(aggregateRequest, surveyId, responseId);
+
+        processedQuestionIds.forEach(questionId -> generateOverallReportForQuestion(surveyId, questionId));
+    }
+
+    /**
+     * AggregateRequest 내의 모든 QuestionAnswerRequest를 처리하여 개별 감성 보고서를 생성하고,
+     * 처리한 질문 ID 집합을 반환합니다.
+     */
+    private Set<Long> processAggregateRequest(AggregateRequest aggregateRequest, Long surveyId, Long responseId) {
+        Set<Long> processedQuestionIds = new HashSet<>();
+
         aggregateRequest.answers().forEach(answer -> {
-            String text = answer.text();
-            if (text == null || text.trim().isEmpty()) {
-                throw new NotFoundException(ReportExceptionType.TEXTS_IS_EMPTY);
-            }
-
-            // 텍스트 감성 분석
-            SentimentStats stats = analyzeText(text);
-            if (stats.getTotal() == 0) {
-                throw new NotFoundException(ReportExceptionType.TEXTS_IS_EMPTY);
-            }
-
-            // 평균 계산
-            double avgPositive = stats.getAvgPositive();
-            double avgNegative = stats.getAvgNegative();
-            double avgNeutral  = stats.getAvgNeutral();
-            double avgMixed    = stats.getAvgMixed();
-
-            SentimentReport report = SentimentReport.builder()
-                                                    .surveyId(surveyId)
-                                                    .questionId(answer.questionId())
-                                                    .responseId(responseId)
-                                                    .totalResponses(stats.getTotal())
-                                                    .positiveCount(stats.getPositiveCount())
-                                                    .negativeCount(stats.getNegativeCount())
-                                                    .neutralCount(stats.getNeutralCount())
-                                                    .mixedCount(stats.getMixedCount())
-                                                    .averagePositive(avgPositive)
-                                                    .averageNegative(avgNegative)
-                                                    .averageNeutral(avgNeutral)
-                                                    .averageMixed(avgMixed)
-                                                    .build();
-
-            sentimentReportRepository.save(report);
+            validateAnswerText(answer);
+            processAnswer(surveyId, responseId, answer);
+            processedQuestionIds.add(answer.questionId());
         });
+
+        return processedQuestionIds;
     }
 
-    private SentimentStats analyzeText(String text) {
-        SentimentStats stats = new SentimentStats();
-        if (text != null && !text.trim().isEmpty()) {
-            DetectSentimentResult dsr = awsComprehendService.analyzeText(text);
-            AWSComprehendResult result = AWSComprehendResult.from(dsr);
-            stats.accumulate(result);
+    private void validateAnswerText(QuestionAnswerRequest answer) {
+        String text = answer.text();
+        if (text == null || text.trim().isEmpty()) {
+            throw new NotFoundException(ReportExceptionType.TEXTS_IS_EMPTY);
         }
-        return stats;
     }
 
-    @Transactional
-    public void generateOverallReport(Long surveyId, Long questionId) {
+    /**
+     * 하나의 QuestionAnswerRequest에 대해 텍스트 감성 분석을 수행하고 개별 감성 보고서를 저장합니다.
+     */
+    private void processAnswer(Long surveyId, Long responseId, QuestionAnswerRequest answer) {
+        String text = answer.text();
+
+        // 텍스트 감성 분석 수행
+        SentimentStats stats = analyzeText(text);
+        if (stats.getTotal() == 0) {
+            throw new NotFoundException(ReportExceptionType.TEXTS_IS_EMPTY);
+        }
+
+        // 평균 값 계산
+        double avgPositive = stats.getAvgPositive();
+        double avgNegative = stats.getAvgNegative();
+        double avgNeutral  = stats.getAvgNeutral();
+        double avgMixed    = stats.getAvgMixed();
+
+        // 개별 감성 보고서 엔티티 생성 및 저장
+        SentimentReport report = SentimentReport.builder()
+                                                .surveyId(surveyId)
+                                                .questionId(answer.questionId())
+                                                .responseId(responseId)
+                                                .totalResponses(stats.getTotal())
+                                                .positiveCount(stats.getPositiveCount())
+                                                .negativeCount(stats.getNegativeCount())
+                                                .neutralCount(stats.getNeutralCount())
+                                                .mixedCount(stats.getMixedCount())
+                                                .averagePositive(avgPositive)
+                                                .averageNegative(avgNegative)
+                                                .averageNeutral(avgNeutral)
+                                                .averageMixed(avgMixed)
+                                                .build();
+
+        sentimentReportRepository.save(report);
+    }
+
+    /**
+     * 특정 설문 및 질문에 대해 개별 보고서들을 조회한 후, 전체 통계 보고서를 생성하거나 업데이트합니다.
+     */
+    private void generateOverallReportForQuestion(Long surveyId, Long questionId) {
         List<SentimentReport> reports = sentimentReportRepository.findAllBySurveyIdAndQuestionId(surveyId, questionId);
         if (reports.isEmpty()) {
             throw new NotFoundException(ReportExceptionType.REPORT_NOT_FOUND);
         }
 
-        // 가중 평균 계산
+        // 개별 보고서들을 기반으로 전체 통계(가중 평균 등)를 계산
         OverallStats stats = OverallStats.fromReports(reports);
 
         OverallSentimentReport overallReport;
@@ -134,6 +155,19 @@ public class SentimentReportService {
             child.addOverallSentimentReportAndSentimentReport(overallReport);
         }
         sentimentReportRepository.saveAll(reports);
+    }
+
+    /**
+     * 텍스트를 기반으로 AWS Comprehend 또는 유사한 서비스를 호출하여 감성 분석 결과를 누적한 통계 데이터를 반환합니다.
+     */
+    private SentimentStats analyzeText(String text) {
+        SentimentStats stats = new SentimentStats();
+        if (text != null && !text.trim().isEmpty()) {
+            DetectSentimentResult dsr = awsComprehendService.analyzeText(text);
+            AWSComprehendResult result = AWSComprehendResult.from(dsr);
+            stats.accumulate(result);
+        }
+        return stats;
     }
 
     public Page<SentimentReportDto> getAllSentimentReportBySurveyAndQuestion(Long surveyId, Long questionId, int page) {
