@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.spring.labels }}-deployment"
+  labels:
+    app: "{{ .Values.spring.labels }}"
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "{{ .Values.spring.labels }}"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.spring.labels }}"
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+    spec:
+      containers:
+        - name: "{{ .Values.spring.labels }}"
+          image: "{{ .Values.spring.image.repository }}:{{ .Values.spring.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.spring.service.report.port }}
+          resources:
+            requests:
+              cpu: "600m"
+              memory: "1200Mi"
+            limits:
+              cpu: "1200m"
+              memory: "2400Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.spring.service.report.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            failureThreshold: 3
+            successThreshold: 1
+
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.spring.service.report.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
