@@ -17,17 +17,23 @@ spring:
   application:
     name: report-service
   datasource:
-    url: jdbc:mysql://localhost:3306/report_service?serverTimezone=UTC
-    username: root
-    password: worldcup7!
+    url: jdbc:mysql://surveypulse-rds.c9s06ug8a482.ap-northeast-2.rds.amazonaws.com:3306/report_service?serverTimezone=UTC
+    username: admin
+    password: asdf2003
     driver-class-name: com.mysql.cj.jdbc.Driver
   kafka:
-    bootstrap-servers:
+    bootstrap-servers: boot-pgudwjf2.c1.kafka-serverless.ap-northeast-2.amazonaws.com:9098
     consumer:
       group-id: report-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    properties:
+      # TLS & SASL 설정
+      security.protocol: SASL_SSL
+      sasl.mechanism: AWS_MSK_IAM
+      sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+      sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
 
   jpa:
     hibernate:

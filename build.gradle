@@ -52,6 +52,7 @@ dependencies {
 
 	// AWS Comprehend SDK 추가
 	implementation 'com.amazonaws:aws-java-sdk-comprehend:1.12.538'
+	implementation 'software.amazon.msk:aws-msk-iam-auth:2.3.2'
 
 	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 
