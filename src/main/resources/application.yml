@@ -17,13 +17,17 @@ spring:
   application:
     name: report-service
   datasource:
-    url: jdbc:mysql://surveypulse-rds.c9s06ug8a482.ap-northeast-2.rds.amazonaws.com:3306/report_service?serverTimezone=UTC
-    username: admin
-    password: asdf2003
+    url:
+    username:
+    password:
     driver-class-name: com.mysql.cj.jdbc.Driver
   kafka:
-    bootstrap-servers: boot-pgudwjf2.c1.kafka-serverless.ap-northeast-2.amazonaws.com:9098
+    bootstrap-servers:
     consumer:
+      max-poll-records: 200      # 한 번에 받을 레코드 수
+      enable-auto-commit: false  # 수동 커밋
+      fetch-max-wait: 100        # 배치 대기(ms)
+      fetch-max-bytes: 2097152   # 2MB
       group-id: report-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -32,7 +36,9 @@ spring:
       # TLS & SASL 설정
       security.protocol: SASL_SSL
       sasl.mechanism: AWS_MSK_IAM
-      sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
+      sasl.jaas.config: >
+        software.amazon.msk.auth.iam.IAMLoginModule required
+        awsRegion="ap-northeast-2";
       sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
 
   jpa:
@@ -45,7 +51,6 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
         show_sql: true
-        default_batch_fetch_size: 100
     open-in-view: false
 
   sql:
@@ -81,5 +86,23 @@ resilience4j.circuitbreaker:
 aws:
   region: ap-northeast-2
   credentials :
-    access-key:
-    secret-key:
+    access-key: AKIAWNHTHTHUOHM7YTIA
+    secret-key: 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
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    root: INFO

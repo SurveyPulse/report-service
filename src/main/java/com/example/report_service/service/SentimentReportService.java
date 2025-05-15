@@ -160,7 +160,7 @@ public class SentimentReportService {
         } else {
             overallReport = OverallSentimentReport.builder()
                                                   .surveyId(surveyId)
-                                                  .questionId(questionId)
+                                                          .questionId(questionId)
                                                   .totalResponses(stats.getTotalResponses())
                                                   .positiveCount(stats.getPositiveCount())
                                                   .negativeCount(stats.getNegativeCount())
