@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.spring.labels }}-deployment"
+  labels:
+    app: "{{ .Values.spring.labels }}"
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "{{ .Values.spring.labels }}"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.spring.labels }}"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.spring.service.report.port }}"
+        prometheus.io/path: "/actuator/prometheus"
+        rollme: {{ randAlphaNum 5 | quote }}
+    spec:
+      nodeSelector:
+        role: app
+      containers:
+        - name: "{{ .Values.spring.labels }}"
+          image: "{{ .Values.spring.image.repository }}:{{ .Values.spring.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.spring.service.report.port }}
+          resources:
+            requests:
+              cpu: "400m"
+              memory: "800Mi"
+            limits:
+              cpu: "800m"
+              memory: "1600Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.spring.service.report.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            failureThreshold: 3
+            successThreshold: 1
+
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.spring.service.report.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
