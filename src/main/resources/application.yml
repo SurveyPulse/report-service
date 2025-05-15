@@ -44,9 +44,9 @@ spring:
     secret: your-very-strong-secret-key-which-is-at-least-32-characters-long
 
 feign:
-  survey-service-url: http://localhost:8083
-  user-service-url: http://localhost:8081
-  response-service-url: http://localhost:8084
+  survey-service-url: http://buildmystudy.com
+  user-service-url: http://buildmystudy.com
+  response-service-url: http://buildmystudy.com
 
 resilience4j.circuitbreaker:
   instances:
