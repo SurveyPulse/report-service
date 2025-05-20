@@ -17,9 +17,9 @@ spring:
   application:
     name: report-service
   datasource:
-    url: jdbc:mysql://localhost:3306/report_service?serverTimezone=UTC
-    username: root
-    password: worldcup7!
+    url:
+    username:
+    password:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -68,5 +68,18 @@ resilience4j.circuitbreaker:
 aws:
   region: ap-northeast-2
   credentials :
-    access-key:
-    secret-key:
+    access-key: AKIAWNHTHTHUOHM7YTIA
+    secret-key: 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
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
