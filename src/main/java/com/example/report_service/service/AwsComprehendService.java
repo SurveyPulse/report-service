@@ -28,13 +28,13 @@ public class AwsComprehendService {
                                                                  .withRegion(region)
                                                                  .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
                                                                  .build();
-            log.info("AWS Comprehend client built with static credentials");
+            log.info("정적 자격 증명으로 AWS Comprehend 클라이언트가 생성되었습니다. region={}, accessKey=****", region);
         } else {
             this.comprehendClient = AmazonComprehendClientBuilder.standard()
                                                                  .withRegion(region)
                                                                  .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
                                                                  .build();
-            log.info("AWS Comprehend client built with default credentials provider chain");
+            log.info("기본 자격 증명 공급자 체인으로 AWS Comprehend 클라이언트가 생성되었습니다. region={}", region);
         }
     }
 
@@ -44,10 +44,13 @@ public class AwsComprehendService {
                     .withText(text)
                     .withLanguageCode("ko");
             DetectSentimentResult result = comprehendClient.detectSentiment(request);
-            log.info("AWS Comprehend result: {}", result.getSentiment());
+            log.info("AWS Comprehend 분석 결과: 감성={}, 긍정점수={}, 부정점수={}",
+                    result.getSentiment(),
+                    result.getSentimentScore().getPositive(),
+                    result.getSentimentScore().getNegative());
             return result;
         } catch (Exception e) {
-            log.error("Error calling AWS Comprehend", e);
+            log.error("AWS Comprehend 호출 중 오류가 발생했습니다.", e);
             throw e;
         }
     }

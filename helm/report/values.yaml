@@ -8,7 +8,7 @@ service:
 spring:
   labels: report
   image:
-    repository: 440744253928.dkr.ecr.ap-northeast-2.amazonaws.com/surveypulse/report   # ECR에 저장된 스프링 이미지 URL
+    repository: 440744253928.dkr.ecr.ap-northeast-2.amazonaws.com/surveypulse/report
     tag: latest
   service:
     port: 80

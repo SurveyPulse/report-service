@@ -14,7 +14,6 @@ public class SentimentReport extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 분석 대상 설문 ID (필요에 따라 사용)
     @Column(nullable = false)
     private Long surveyId;
 
@@ -31,11 +30,9 @@ public class SentimentReport extends BaseEntity {
     @JoinColumn(name = "overall_sentiment_report_id")
     private OverallSentimentReport overallSentimentReport;
 
-    // 전체 응답 수
     @Column(nullable = false)
     private int totalResponses;
 
-    // 감성 유형별 응답 개수
     @Column(nullable = false)
     private int positiveCount;
     @Column(nullable = false)

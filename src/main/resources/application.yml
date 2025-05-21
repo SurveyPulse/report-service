@@ -68,8 +68,8 @@ resilience4j.circuitbreaker:
 aws:
   region: ap-northeast-2
   credentials :
-    access-key: AKIAWNHTHTHUOHM7YTIA
-    secret-key: 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
+    access-key:
+    secret-key:
 
 management:
   endpoints:
@@ -83,3 +83,7 @@ management:
     export:
       prometheus:
         enabled: true
+
+logging:
+  level:
+    root: INFO

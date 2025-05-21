@@ -8,16 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "overall_sentiment_reports")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(
+        name = "overall_sentiment_reports",
+        indexes = {
+                @Index(name = "idx_survey", columnList = "surveyId")
+        }
+)
 public class OverallSentimentReport extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 분석 대상 설문 ID
     @Column(nullable = false)
     private Long surveyId;
 
