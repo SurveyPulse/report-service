@@ -1,4 +1,3 @@
-````markdown
 # MSA 기반 SurveyPulse 분석 보고서 서비스
 
 SurveyPulse 플랫폼의 설문 응답을 바탕으로 AWS Comprehend로 감성 분석을 수행하고, 개별 및 전체 통계 보고서를 생성·조회하는 마이크로서비스입니다.
@@ -37,3 +36,11 @@ SurveyPulse 플랫폼의 설문 응답을 바탕으로 AWS Comprehend로 감성 
 - **컨테이너 & 오케스트레이션**: Docker, Kubernetes, Helm, AWS EKS
 - **아키텍처**: 마이크로서비스 아키텍처(MSA)
 
+## 아키텍처
+
+![서비스 아키텍처 다이어그램](https://github.com/SurveyPulse/user-service/blob/main/docs/images/aws-architecture.png)
+![RDS 아키텍처 다이어그램](https://github.com/SurveyPulse/user-service/blob/main/docs/images/aws-rds-architecture.png)
+
+
+## CI/CD 아키텍처
+![CI/CD 파이프라인 다이어그램](https://github.com/SurveyPulse/user-service/blob/main/docs/images/cicd-architecture.png)
