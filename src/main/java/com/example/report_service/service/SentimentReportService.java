@@ -237,7 +237,7 @@ public class SentimentReportService {
     public Page<OverallSentimentReportSummaryDto> getAllOverallReportBySurvey(Long surveyId, int page) {
         log.info("설문 ID [{}]에 대한 전체 감성 보고서 목록 조회 시작 (페이지 {})", surveyId, page);
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<OverallSentimentReport> overallSentimentReports = overallReportRepository.findBySurveyIdIgnoreIndex(surveyId, pageable);
+        Page<OverallSentimentReport> overallSentimentReports = overallReportRepository.findAllBySurveyId(surveyId, pageable);
 
         if (overallSentimentReports.isEmpty()) {
             log.warn("설문 ID [{}]에 해당하는 전체 감성 보고서가 없습니다", surveyId);

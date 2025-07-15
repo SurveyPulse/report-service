@@ -17,20 +17,6 @@ public interface OverallSentimentReportRepository extends JpaRepository<OverallS
 
     boolean existsBySurveyIdAndQuestionId(Long surveyId, Long questionId);
 
-    @Query(
-            value = """
-        SELECT *
-          FROM overall_sentiment_reports
-        IGNORE INDEX (idx_survey)
-         WHERE surveyId = :surveyId
-        ORDER BY id
-        """,
-            countQuery = """
-        SELECT COUNT(*)
-          FROM overall_sentiment_reports
-         WHERE surveyId = :surveyId
-        """,
-            nativeQuery = true
-    )
-    Page<OverallSentimentReport> findBySurveyIdIgnoreIndex(@Param("surveyId") Long surveyId, Pageable pageable);
+    Page<OverallSentimentReport> findAllBySurveyId(Long surveyId, Pageable pageable);
+
 }
