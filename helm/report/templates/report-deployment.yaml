@@ -40,7 +40,7 @@ spec:
               path: /api/health
               port: {{ .Values.spring.service.report.port }}
             initialDelaySeconds: 30
-            periodSeconds: 60
+            periodSeconds: 15
             failureThreshold: 3
             successThreshold: 1
 
