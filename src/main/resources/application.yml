@@ -50,20 +50,20 @@ feign:
 
 resilience4j.circuitbreaker:
   instances:
-    userService:
-      registerHealthIndicator: true
-      slidingWindowSize: 10
-      minimumNumberOfCalls: 5
-      permittedNumberOfCallsInHalfOpenState: 3
-      failureRateThreshold: 50
-      waitDurationInOpenState: 10s
     surveyService:
-      registerHealthIndicator: true
       slidingWindowSize: 10
-      minimumNumberOfCalls: 5
-      permittedNumberOfCallsInHalfOpenState: 3
       failureRateThreshold: 50
       waitDurationInOpenState: 10s
+      permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      surveyService:
+        maxAttempts: 3
+        waitDuration: 1s
+  timelimiter:
+    instances:
+      surveyService:
+        timeoutDuration: 2s
 
 aws:
   region: ap-northeast-2

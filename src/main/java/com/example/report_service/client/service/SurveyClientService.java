@@ -17,6 +17,8 @@ public class SurveyClientService {
     private final SurveyClient surveyClient;
 
     @CircuitBreaker(name = "surveyService", fallbackMethod = "fallbackGetQuestionWithSurvey")
+    @Retry(name = "surveyService", fallbackMethod = "fallbackGetQuestionWithSurvey")
+    @TimeLimiter(name = "surveyService")
     public QuestionWithSurveyDto getQuestionWithSurvey(Long surveyId, Long questionId) {
         return surveyClient.getQuestionWithSurvey(surveyId, questionId);
     }
