@@ -6,7 +6,9 @@ metadata:
     app: "{{ .Values.spring.labels }}"
 
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: 3
+  {{- end }}
   selector:
     matchLabels:
       app: "{{ .Values.spring.labels }}"

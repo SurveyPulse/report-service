@@ -124,12 +124,16 @@ jobs:
       - name: deploy
         id: status
         run: |
+          run: |
           helm upgrade --install report-app ./helm/report --create-namespace --namespace report \
           --set image.tag=${{ github.sha }} \
           --set image.repository=${{ secrets.REGISTRY }}/${{ vars.REPORT_REPOSITORY }} \
           --set spring.datasource.url=${{ secrets.SPRING_REPORT_DATASOURCE_URL }} \
           --set spring.datasource.username=${{ secrets.SPRING_REPORT_DATASOURCE_USERNAME }} \
           --set spring.datasource.password=${{ secrets.SPRING_REPORT_DATASOURCE_PASSWORD }} \
+          --set aws.credentials.accessKey=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          --set aws.credentials.secretKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
       - name: notify
         if: always()
         uses: slackapi/slack-github-action@v1.24.0
