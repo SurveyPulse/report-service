@@ -22,8 +22,8 @@ spring:
 
 aws:
   credentials:
-    accessKey: "<your-access-key>"
-    secretKey: "<your-secret-key>"
+    accessKey: ""
+    secretKey: ""
 
 autoscaling:
   enabled: true

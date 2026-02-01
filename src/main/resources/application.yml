@@ -19,9 +19,9 @@ spring:
   application:
     name: report-service
   datasource:
-    url:
-    username:
-    password:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   lifecycle:
     timeout-per-shutdown-phase: 30s
@@ -49,6 +49,11 @@ spring:
 
 feign:
   survey-service-url: http://survey-service
+  client:
+    config:
+      default:
+        connectTimeout: 3000
+        readTimeout: 5000
 
 resilience4j.circuitbreaker:
   instances:
@@ -57,21 +62,21 @@ resilience4j.circuitbreaker:
       failureRateThreshold: 50
       waitDurationInOpenState: 10s
       permittedNumberOfCallsInHalfOpenState: 3
+      # 타임아웃 발생 시 서킷브레이커가 실패로 카운팅하도록 명시
+      recordExceptions:
+        - java.net.SocketTimeoutException
+        - java.util.concurrent.TimeoutException
   retry:
     instances:
       surveyService:
         maxAttempts: 3
         waitDuration: 1s
-  timelimiter:
-    instances:
-      surveyService:
-        timeoutDuration: 2s
 
 aws:
   region: ap-northeast-2
   credentials :
-    access-key:
-    secret-key:
+    access-key: ${AWS_CREDENTIALS_ACCESS_KEY}
+    secret-key: ${AWS_CREDENTIALS_SECRET_KEY}
 
 management:
   tracing:
