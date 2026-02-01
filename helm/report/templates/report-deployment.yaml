@@ -20,11 +20,33 @@ spec:
         prometheus.io/path: "/actuator/prometheus"
         rollme: {{ randAlphaNum 5 | quote }}
     spec:
+      terminationGracePeriodSeconds: 60
       nodeSelector:
         role: app
       containers:
         - name: "{{ .Values.spring.labels }}"
           image: "{{ .Values.spring.image.repository }}:{{ .Values.spring.image.tag }}"
+          imagePullPolicy: Always
+          # Ingress 라우팅 제외될 때까지 시간 벌어주기
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "/bin/sh", "-c", "sleep 20" ]
+
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: {{ .Values.spring.datasource.url | quote }}
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.spring.datasource.username | quote }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.spring.datasource.password | quote }}
+            - name: AWS_CREDENTIALS_ACCESS_KEY
+              value: {{ .Values.aws.credentials.accessKey | quote }}
+            - name: AWS_CREDENTIALS_SECRET_KEY
+              value: {{ .Values.aws.credentials.secretKey | quote }}
+            - name: AWS_REGION
+              value: "ap-northeast-2"
+
           ports:
             - containerPort: {{ .Values.spring.service.report.port }}
           resources:
