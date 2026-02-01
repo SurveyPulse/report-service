@@ -20,6 +20,6 @@ spec:
             pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
-                name: {{ .Values.spring.service.report.name }}
+                name: "{{ .Values.spring.labels }}-service"
                 port:
                   number: {{ .Values.spring.service.port }}
