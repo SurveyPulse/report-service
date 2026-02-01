@@ -20,6 +20,11 @@ spring:
     username:
     password:
 
+aws:
+  credentials:
+    accessKey: "<your-access-key>"
+    secretKey: "<your-secret-key>"
+
 autoscaling:
   enabled: true
   minReplicas: 2
@@ -43,7 +48,7 @@ autoscaling:
 
   behavior:
     scaleUp:
-      stabilizationWindowSeconds: 120
+      stabilizationWindowSeconds: 0
       policies:
         - type: Percent
           value: 100
